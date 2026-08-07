@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="hy">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Գրանցում</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .form-container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="form-container">
+        <h2>Երեխայի Գրանցման Ձև</h2>
+        <form id="registrationForm">
+
+            <div class="form-group">
+                <label for="childName">Երեխայի Անուն *</label>
+                <input type="text" id="childName" required placeholder="Անուն">
+            </div>
+
+            <div class="form-group">
+                <label for="childSurname">Երեխայի Ազգանուն *</label>
+                <input type="text" id="childSurname" required placeholder="Ազգանուն">
+            </div>
+
+            <div class="form-group">
+                <label for="childDob">Ծննդյան Ամսաթիվ *</label>
+                <input type="date" id="childDob" required>
+            </div>
+
+            <div class="form-group">
+                <label for="parentName">Ծնողի Անուն Ազգանուն *</label>
+                <input type="text" id="parentName" required placeholder="Անուն Ազգանուն">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Հեռախոսահամար *</label>
+                <input type="tel" id="phone" required placeholder="+374 XXXXXXXX">
+            </div>
+
+            <div class="form-group">
+                <label for="phone2">Հեռախոսահամար 2</label>
+                <input type="tel" id="phone2" placeholder="+374 XXXXXXXX">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Հասցե *</label>
+                <input type="text" id="address" required placeholder="Հասցե">
+            </div>
+
+            <button type="submit" id="submitBtn">Գրանցվել</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Քո Firebase կոնֆիգուրացիան
+        const firebaseConfig = {
+            apiKey: "AIzaSyC6O59wtedoLbeUCF5mF4Dkz4a2u-OK8Aw",
+            authDomain: "goharik-dance.firebaseapp.com",
+            projectId: "goharik-dance",
+            storageBucket: "goharik-dance.firebasestorage.app",
+            messagingSenderId: "996113060132",
+            appId: "1:996113060132:web:d05d0610e4ba58ad50a3b1",
+            measurementId: "G-JJPYZBPQTT"
+        };
+
+        // Ինիցիալիզացիա Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const form = document.getElementById('registrationForm');
+
+        // Ֆորմայի ուղարկում (Firestore)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Ուղարկվում է...";
+
+            try {
+                // Տվյալների պատրաստում Firestore-ի համար
+                const formData = {
+                    childName: document.getElementById('childName').value,
+                    childSurname: document.getElementById('childSurname').value,
+                    childDob: document.getElementById('childDob').value,
+                    parentName: document.getElementById('parentName').value,
+                    phone: document.getElementById('phone').value,
+                    phone2: document.getElementById('phone2').value,
+                    address: document.getElementById('address').value,
+                    isPaid: false,
+                    payments: [],
+                    createdAt: new Date()
+                };
+
+                // Պահպանում Firestore-ում ("registrations" հավաքածու)
+                await addDoc(collection(db, "registrations"), formData);
+
+                alert("Տվյալները հաջողությամբ պահպանվեցին դպրոցի բազայում:");
+
+                // Ֆորմայի մաքրում հաջող ավարտից հետո
+                form.reset();
+
+            } catch (error) {
+                console.error("Սխալ տեղի ունեցավ: ", error);
+                alert("Գրանցման սխալ. " + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Գրանցվել";
+            }
+        });
+    </script>
+
+</body>
+
+</html>
